@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "33125799164",
+    "firebase_url": "https://talker-dfbd3.firebaseio.com",
+    "project_id": "talker-dfbd3",
+    "storage_bucket": "talker-dfbd3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:33125799164:android:028915762ac3ca0e",
+        "android_client_info": {
+          "package_name": "com.pablorojas.talker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "33125799164-o0cpf4c6dfgirttap986r5lio9h5qt47.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pablorojas.talker",
+            "certificate_hash": "1e6a57103efa5373dd14a264249335b65da281a0"
+          }
+        },
+        {
+          "client_id": "33125799164-2lobo51e92rf3llop0eseqo8pvth272g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr11kGi853SshE7MZjsE9nCP5Avu5pNMI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "33125799164-2lobo51e92rf3llop0eseqo8pvth272g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,55 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    signingConfigs {
+        config {
+            keyAlias 'talker'
+            keyPassword 'talker'
+            storeFile file('/Users/pablo/Desktop/MyApps/Talker/keys/TalkerKeyStore')
+            storePassword 'talker'
+        }
+    }
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "com.pablorojas.talker"
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 3
+        versionName "1.0.3"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable true
+            signingConfig signingConfigs.config
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    //Firebase Core
+    implementation 'com.google.firebase:firebase-core:16.0.3'
+    //Firebase UI
+    implementation 'com.firebaseui:firebase-ui-auth:4.0.1'
+    //Firebase Storage
+    implementation 'com.google.firebase:firebase-storage:16.0.2'
+    //Firebase Database
+    implementation 'com.google.firebase:firebase-database:16.0.2'
+    //Anko
+    implementation "org.jetbrains.anko:anko:$anko_version"
+    //Number Picker
+    implementation 'com.alex-zaitsev:meternumberpicker:1.0.4'
+}
+apply plugin: 'com.google.gms.google-services'
