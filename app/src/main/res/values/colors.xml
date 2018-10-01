@@ -5,4 +5,7 @@
     <color name="colorAccent">#FF4081</color>
     <color name="orange_accent_200">#ffab40</color>
     <color name="orange_material_200">#ffcc80</color>
+    <color name="material_indigo_300">#FF7986CB</color>
+
+
 </resources>

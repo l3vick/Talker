@@ -26,9 +26,9 @@ import org.jetbrains.anko.toast
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import android.support.annotation.NonNull
-import com.google.firebase.storage.StorageReference
-import java.io.FileOutputStream
+import android.support.v4.content.ContextCompat
+import com.google.firebase.storage.UploadTask
+import org.jetbrains.anko.textColor
 
 
 class MainActivity : AppCompatActivity() {
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
     val firebaseStorage = FirebaseStorage.getInstance("gs://talker-dfbd3.appspot.com")
 
-    val storageRef = firebaseStorage.reference
+    var storageRef = firebaseStorage.reference
 
     val user = FirebaseAuth.getInstance().currentUser
 
@@ -66,6 +66,8 @@ class MainActivity : AppCompatActivity() {
 
         mFileName = "${externalCacheDir.absolutePath}/audiorecordtest.3gp"
 
+        mPlayer = MediaPlayer()
+
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
 
@@ -76,12 +78,14 @@ class MainActivity : AppCompatActivity() {
         record.onTouch { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    //playStartMic()
                     resizeBigButton()
                     if (sessionStarted) {
                         startRecording()
                     }
                 }
                 MotionEvent.ACTION_UP -> {
+                    //playStopMic()
                     resizeSmallButton()
                     if (sessionStarted) {
                         stopRecording()
@@ -93,29 +97,64 @@ class MainActivity : AppCompatActivity() {
         }
 
         play.onClick {
-            startPlaying()
+            //startPlaying()
         }
 
         joinSession.onClick {
-            sessionStarted = true
-
             listenSession()
+            blockSession()
+            sessionStarted = true
         }
+
         createSession.onClick {
-
-            val tsLong = System.currentTimeMillis() / 1000
-            val ts = tsLong.toString()
-
-            val users = HashMap<String, String>()
-            users.put("userid", user!!.uid)
-            users.put("timestamp", ts)
-            users.put("sessionpassword", "")
-
-            val sessionsRef = database.getReference("sessions")
-            sessionsRef.child("session_" + meterPicker.value).setValue(users)
+            createSession()
             listenSession()
+            blockSession()
             sessionStarted = true
         }
+    }
+
+    private fun blockSession() {
+        joinSession.isEnabled = false
+        joinSession.isClickable = false
+        joinSession.textColor = ContextCompat.getColor(this, R.color.material_indigo_300)
+        createSession.isEnabled = false
+        createSession.isClickable = false
+        createSession.textColor = ContextCompat.getColor(this, R.color.material_indigo_300)
+    }
+
+    private fun playStartMic() {
+        val mediaPlayer = MediaPlayer()
+        mediaPlayer.setDataSource(assets.openFd("startMic.wav"))
+        mediaPlayer.prepare()
+        mediaPlayer.start()
+        mediaPlayer.setOnCompletionListener {
+            mediaPlayer.release()
+        }
+    }
+
+    private fun playStopMic() {
+        val mediaPlayer = MediaPlayer()
+        mediaPlayer.setDataSource(assets.openFd("stopMic.wav"))
+        mediaPlayer.prepare()
+        mediaPlayer.start()
+        mediaPlayer.setOnCompletionListener {
+            mediaPlayer.release()
+        }
+
+    }
+
+    private fun createSession() {
+        val tsLong = System.currentTimeMillis() / 1000
+        val ts = tsLong.toString()
+
+        val users = HashMap<String, String>()
+        users.put("userid", user!!.uid)
+        users.put("timestamp", ts)
+        users.put("sessionpassword", "")
+
+        val sessionsRef = database.getReference("sessions")
+        sessionsRef.child("session_" + meterPicker.value).setValue(users)
     }
 
     private fun listenSession() {
@@ -128,20 +167,29 @@ class MainActivity : AppCompatActivity() {
 
                 if (value != null) {
                     for ((key, map) in value) {
-                        val audioRef = storageRef.child(map.get("audioreference")!!)
+                        /*val audioRef = storageRef.child(map.get("audioreference")!!)
 
-                        if (map.get("userid") == user!!.uid) {
+                         if (map.get("userid") == user!!.uid) {
 
-                        } else {
-                            val ONE_MEGABYTE = (1024 * 1024).toLong()
-                            audioRef.getBytes(ONE_MEGABYTE).addOnSuccessListener {
-                                val audioFile = File(mFileName)
-                                val stream = FileOutputStream(audioFile)
-                                stream.write(it)
-                                startPlaying()
-                            }.addOnFailureListener {
-                                // Handle any errors
-                            }
+                         } else {
+                             val ONE_MEGABYTE = (1024 * 1024).toLong()
+                             audioRef.getBytes(ONE_MEGABYTE).addOnSuccessListener {
+                                 val audioFile = File(mFileName)
+                                 val stream = FileOutputStream(audioFile)
+                                 stream.write(it)
+                                 startPlaying()
+                             }.addOnFailureListener {
+                                 // Handle any errors
+                             }
+                         }*/
+
+                        if (map.get("userid") != user!!.uid) {
+                            storageRef = firebaseStorage.getReferenceFromUrl(map.get("pathreference")!!)
+                            storageRef.getDownloadUrl().addOnSuccessListener(OnSuccessListener<Any> { uri ->
+                                val url = uri.toString()
+                                startPlaying(url)
+
+                            }).addOnFailureListener(OnFailureListener { e -> Log.i("TAG", e.message) })
                         }
                     }
                 }
@@ -153,6 +201,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
 
     private fun resizeBigButton() {
         val params = record.layoutParams
@@ -185,19 +234,19 @@ class MainActivity : AppCompatActivity() {
         val tsLong = System.currentTimeMillis() / 1000
         val ts = tsLong.toString()
 
-
         val storageFileName = user!!.uid + "-session" + meterPicker.value + ".3gp"
 
         val record = HashMap<String, String>()
         record.put("userid", user!!.uid)
         record.put("audioreference", storageFileName)
-
-
-        val audioRef = storageRef.child(storageFileName)
+        val audioRef = storageRef.root.child(storageFileName)
         val uploadTask = audioRef.putStream(stream)
+
         uploadTask.addOnFailureListener(OnFailureListener {
             toast("Error al enviar audio")
         }).addOnSuccessListener(OnSuccessListener<Any> {
+            val metadata = (it as UploadTask.TaskSnapshot).metadata
+            record.put("pathreference", metadata!!.reference.toString())
             database.getReference("sessions").child("session_" + meterPicker.value).child("records").child(ts).setValue(record)
         })
     }
@@ -223,10 +272,10 @@ class MainActivity : AppCompatActivity() {
         if (!permissionToRecordAccepted) finish()
     }
 
-    private fun startPlaying() {
+    private fun startPlaying(dataSource: String) {
         mPlayer = MediaPlayer().apply {
             try {
-                setDataSource(mFileName)
+                setDataSource(dataSource)
                 prepare()
                 start()
             } catch (e: IOException) {
@@ -240,7 +289,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopPlaying() {
-        mPlayer?.release()
+        mPlayer!!.release()
         mPlayer = null
     }
 
